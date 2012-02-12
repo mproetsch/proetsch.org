@@ -7,31 +7,61 @@ KEYCHAIN_ENCRYPTED=$XDG_DATA_HOME/pwdb/keychain.aes
 
 #Get password and domain (pw for reddit.com, facebook.com, suntrust.com, etc)
 #This isn't secure, so make sure your environment is!
-read -s -p Password: PWORD
-echo -e "\n"
-read -p Domain: DOMAIN
+read -s -p 'Password: ' PWORD
+echo -e
+read -p 'Domain: ' DOMAIN
 
 aescrypt -d -p $PWORD -o $KEYCHAIN_DECRYPTED $KEYCHAIN_ENCRYPTED
 
+if [ ! -e $KEYCHAIN_DECRYPTED ]
+then
+  #aescrypt will print an appropriate error statemenrt
+  #so we don't have to
+  exit
+fi
+
 #Get the number of lines (but not filename!) from wc by piping the cat output to it
 KEYCHAIN_LINES=`cat $KEYCHAIN_DECRYPTED | wc -l`
+KEYCHAIN_LINES=`expr $KEYCHAIN_LINES + 1`
 
 #This whole predicament could have been avoided with CURRENT_LINE=`grep $DOMAIN $KEYCHAIN_DECRYPTED`
 #Iterate through $KEYCHAIN_DECRYPTED's lines, checking to see if domain matches $DOMAIN in any of them
+
+FOUND=0
+
 for i in  $(eval echo {1..$KEYCHAIN_LINES})
 do
-
   #Sets $1 to DOMAIN and $2 to the associated PASSWORD
   set -- `head -n $i $KEYCHAIN_DECRYPTED | tail -n 1`
 
   #check to see if the first word on the line is our domain
   if [ $1 = $DOMAIN ]
   then
+    FOUND=1
     echo $2 > $XDG_DATA_HOME/pwdb/$DOMAIN.out
     leafpad $XDG_DATA_HOME/pwdb/$DOMAIN.out
+
+    #Clean up!
+    rm $XDG_DATA_HOME/pwdb/$DOMAIN.out
   fi
 done
 
-rm $XDG_DATA_HOME/pwdb/$DOMAIN.out
-rm $KEYCHAIN_DECRYPTED
+if [ $FOUND = 0 ]
+then
+  #Ensure we are working with a decrypted copy
+  if [ -e $KEYCHAIN_DECRYPTED ]
+  then
+    NEW_PW=`newpw 12`
+    echo $DOMAIN $NEW_PW >> $KEYCHAIN_DECRYPTED
+    aescrypt -e -p $PWORD -o $KEYCHAIN_ENCRYPTED $KEYCHAIN_DECRYPTED
 
+    echo 'Wrote new password for ' $DOMAIN
+    echo $NEW_PW > $XDG_DATA_HOME/pwdb/$DOMAIN.new
+    leafpad $XDG_DATA_HOME/pwdb/$DOMAIN.new
+
+    rm $XDG_DATA_HOME/pwdb/$DOMAIN.new
+  fi
+fi
+
+#Erase unencrypted pw file
+rm $KEYCHAIN_DECRYPTED
