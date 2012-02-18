@@ -213,19 +213,21 @@ int main() {
  
 	UserWork *curr;
 	for(curr = *workHead; curr != NULL; curr = curr->next) {
-		fprintf(fout, "\t%s, %s\n", curr->lastName, curr->firstName);
-		fprintf(fout, "\t\tUser's GB analyzed: %d\n", curr->gbAnalyzed);
-		fprintf(fout, "\t\tUser's planets discovered: %d\n\n", curr->planetsDiscovered);
+		fprintf(fout, "\t%s, %s - Analyzed:%d Discovered:%d\n", curr->lastName, 
+																curr->firstName,
+																curr->gbAnalyzed,
+																curr->planetsDiscovered);
 
 	}
 
-	fprintf(fout, "Discovered planets:\n");
+	fprintf(fout, "\nDiscovered planets:\n");
 
 	DiscPlanet *currD;
 	for(currD = *discHead; currD != NULL; currD = currD->next) {
-        fprintf(fout, "\t(%d, %d, %d) Type: ", currD->coordinates->x,
-                                  currD->coordinates->y,
-                                  currD->coordinates->z);
+        fprintf(fout, "\t(%d,%d,%d) - Confirmed:%d Type:", currD->coordinates->x,
+															   currD->coordinates->y,
+															   currD->coordinates->z,
+															   currD->usersConfirmed);
 
         if(currD->type == BARREN) fprintf (fout, "BARREN");
         if(currD->type == GAS) fprintf (fout, "GAS");
@@ -240,12 +242,11 @@ int main() {
         fprintf(fout, "\n");
 	}
 
-	fprintf(fout, "\n");
-    fprintf(fout, "Verified planets:\n");
+    fprintf(fout, "\nVerified planets:\n");
 
     VerPlanet *currV;
     for(currV = *verHead; currV != NULL; currV = currV->next) {
-        fprintf(fout, "\t(%d, %d, %d) Type: ", currV->coordinates->x,
+        fprintf(fout, "\t(%d,%d,%d) - Type:", currV->coordinates->x,
                                         currV->coordinates->y,
                                         currV->coordinates->z);
 
@@ -264,8 +265,9 @@ int main() {
 
 	fclose(fin);
 	fclose(fout);
+	
 	return 0;
-	//free up all that goddamn garbage
+	
 
 }
 
@@ -306,7 +308,7 @@ void InsertWorker(UserWork **head, UserWork *newWorker) {
 		}
 	}
 
-	//if newWorker doesn't come first, decide where it belongs
+	//if newWorker doesn't belong at head, decide where it belongs
 
 	for( ; current->next != NULL; current = current->next) {
 
@@ -315,9 +317,8 @@ void InsertWorker(UserWork **head, UserWork *newWorker) {
 			newWorker->next = current;
 			prev->next = newWorker;
 			return;
-		}
-
-		else if(strcmp(newWorker->lastName, current->lastName) == 0) {
+			
+		} else if(strcmp(newWorker->lastName, current->lastName) == 0) {
 			//matching last names, so we must sort by first names
 
 			if(strcmp(newWorker->firstName, current->firstName) < 0) {
@@ -329,11 +330,11 @@ void InsertWorker(UserWork **head, UserWork *newWorker) {
 
 			}
 			else if(strcmp(newWorker->firstName, current->firstName) > 0) {
-				//newWorker's first name comes after current's first name, so
-				//place newWorker after current
-				newWorker->next = current->next;
-				current->next = newWorker;
-				return;
+				//unable to place newWorker here, and we don't know how long before
+				//newWorker's firstName will come next alphabetically, so we just
+				//advance our pointer for now
+				continue;
+				
 			}
 
 			//It should never be the case that both last names and first names match
@@ -341,6 +342,30 @@ void InsertWorker(UserWork **head, UserWork *newWorker) {
 
 		//advance prev pointer and continue
 		prev = current;
+	}
+	
+	//we're now dealing with the final element in the list
+	//since we broke out of the for-loop with condition "current->next == NULL"
+	
+	if(strcmp(newWorker->lastName, current->lastName) < 0) {
+		newWorker->next = current;
+		prev->next = newWorker;
+		return;
+	
+	} else if(strcmp(newWorker->lastName, current->lastName) > 0) {
+		current->next = newWorker;
+		return;
+	
+	} else {
+		if(strcmp(newWorker->firstName, current->firstName) < 0) {
+			newWorker->next = current;
+			prev->next = newWorker;
+			return;
+		} else {
+			current->next = newWorker;
+			return;
+		}
+		
 	}
 }
 
@@ -416,6 +441,7 @@ void InsertVerified(VerPlanet **verHead, DiscPlanet *newVerTemp) {
 	newVer->next = NULL;
 
 	VerPlanet *current = *verHead;
+	VerPlanet *prev = current;
 
 	if(*verHead == NULL) {
 		//Make a new list for verified planets
@@ -434,23 +460,32 @@ void InsertVerified(VerPlanet **verHead, DiscPlanet *newVerTemp) {
 		//Insert newVer in the list of verified planets pointed to by verHead
 		//according to its distance from the earth
 
-		for(current = *verHead; current != NULL; current = current->next) {
+		for(current = *verHead; current->next != NULL; current = current->next) {
 
 			if(DistanceFromEarth(newVer) > DistanceFromEarth(current)) {
 				//Do nothing until we reach a planet that is further from earth than newVer
 
+				prev = current;
 				continue;
 			}
 
-			else if(DistanceFromEarth(newVer) >= DistanceFromEarth(current)) {
-				//insert newVer[ifiedPlanet] into the list after current
-                newVer->next = current->next;
-                current->next = newVer;
-
+			else if(DistanceFromEarth(newVer) <= DistanceFromEarth(current)) {
+				//insert newVer[ifiedPlanet] into the list before that planet
+				
+                newVer->next = current;
+                prev->next = newVer;
 				return;
 			}
 
-			//prev = current;
+		}
+		
+		//we are at the final planet in the list
+		if(DistanceFromEarth(newVer) < DistanceFromEarth(current)) {
+			newVer->next = current;
+			prev->next = newVer;
+			
+		} else {
+			current->next = newVer;
 		}
 	}
 	return;
