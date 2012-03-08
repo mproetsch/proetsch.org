@@ -22,9 +22,12 @@ public class Cave {
         row = r;
         column = c;
 
-        /* TODO figure out what
-         * this constructor does
-         **/
+        blocked = false;
+        marked = false;
+        occupied = false;
+        open = true;
+        pit = false;
+        teleport = false;
     }
 
     //Get the column of this cave
@@ -75,20 +78,19 @@ public class Cave {
 
     //Mark this cave as open
     public void makeOpen() {
-        this.blocked = false;
         this.pit = false;
+        this.blocked = false;
         this.open = true;
     }
 
     //Mark this cave as a pit
     public void makePit() {
-        this.open = false;
+        this.open = true;
         this.pit = true;
     }
 
     //Mark this cave as a teleport
     public void makeTeleport() {
-        this.open = true;
         this.teleport = true;
     }
 
