@@ -22,7 +22,6 @@ public class Cave {
         row = r;
         column = c;
 
-        initial = CaveType.OPEN;
         blocked = false;
         marked = false;
         occupied = false;
