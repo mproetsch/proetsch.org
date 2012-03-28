@@ -20,13 +20,13 @@
 
 #define SIDE_LEN 8
 #define NUM_GEMS 7
-#define WAIT_TIME_uS 4000
-#define SLEEP_TIME_uS 0
+#define WAIT_TIME_uS 3000
+#define SLEEP_TIME_uS 60000
 
 
-#define XOFFSET 343
-#define YOFFSET 335
-#define SPACING 39 //Represents square sides in pixels of the Bejeweled grid
+#define XOFFSET 345
+#define YOFFSET 336
+#define SPACING 40 //Represents square sides in pixels of the Bejeweled grid
 
 typedef enum GEMCOLOR {
 	BLUE = 0,
@@ -43,7 +43,7 @@ char** findMatchHorizontal(int [][SIDE_LEN], int);
 char** findMatchVertical(int [][SIDE_LEN], int);
 int inBounds(int, int);
 void get_pixel_color(Display*, Window, int, int, XColor*);
-int findGemColor(XColor *c);
+int findGemColor(XColor *c1, XColor *c2, XColor *c3, XColor *c4);
 
 void main(int argc, char *argv[]) {
 	
@@ -51,7 +51,7 @@ void main(int argc, char *argv[]) {
 	Window root = DefaultRootWindow(dpy);
 	const struct xdo_t *newdo = xdo_new_with_opened_display(dpy, ":0", 0);
 	
-	while(1) {
+    while(1) {
 	
 	int GameGrid[SIDE_LEN][SIDE_LEN];
 	
@@ -59,41 +59,36 @@ void main(int argc, char *argv[]) {
 	int i = 0, j = 0;
 	int y = YOFFSET, x = XOFFSET;
 	
-	//Move from the corner of the grid to the center of the first square
-	//also some tweaks for FF 10.0.2 under ArchLinux 3.2.7-1 YMMV
+    //Here we have some spacing constants for Bejeweled Blitz
 	y += (SPACING / 2) + 1;
-	x += 19;
+	x += 20;
 	
 	for(i = 0; i < SIDE_LEN; i++) {
 		for(j = 0; j < SIDE_LEN; j++) {
 			
-			XColor c;
-			get_pixel_color(dpy, root, x, y, &c);
-			int color = findGemColor(&c);
-			GameGrid[i][j] = color;
-			printf("(%d, %d, %d) ", c.red, c.green, c.blue);
+			XColor c1, c2, c3, c4;
+			get_pixel_color(dpy, root, x-1, y-1, &c1); //Top-left
+			get_pixel_color(dpy, root, x, y-1, &c2);   //Top-right
+			get_pixel_color(dpy, root, x-1, y, &c3);   //Bottom-left
+			get_pixel_color(dpy, root, x, y, &c4);     //Bottom-right
+
+            printf("Row %d col %d:\n", i, j);
+
+            printf("\tAvg red: %d\n\tAvg green: %d\n\tAvg blue: %d\n\n",
+                    (c1.red + c2.red + c3.red + c4.red)/4,
+                    (c1.green + c2.green + c3.green + c4.green)/4,
+                    (c1.blue + c2.blue + c3.blue + c4.blue)/4);
+
+            int color = findGemColor(&c1, &c2, &c3, &c4);
+
+            GameGrid[i][j] = color;
 			
 			x += SPACING;
 			
 		}
-		printf("\n\n");
 		x = XOFFSET + (SPACING / 2);
 		y += SPACING;
-	}
-	
-    
-    /* Randomly generated game grid
-     * 
-    int GameGrid[SIDE_LEN][SIDE_LEN]; 
-    int i, j;
-    for(i = 0; i < SIDE_LEN; i++) {
-        for(j = 0; j < SIDE_LEN; j++) {
-            GameGrid[i][j] = rand() % 7;
-        }
     }
-    **/
-    
-
     
     for(i = 0; i < SIDE_LEN; i++) {
         for(j = 0; j < SIDE_LEN; j++) {
@@ -123,8 +118,7 @@ void main(int argc, char *argv[]) {
 	    int MatchYint = atoi(matchy);
 	    int MatchXint = atoi(matchx);
 	    
-	    printf("Match found! Offset [%d][%d] by moving %s\n", MatchYint, MatchXint,
-	                                                          firstMatchFound[1]);
+		/*printf("Match found! Offset [%d][%d] by moving %s\n", MatchYint, MatchXint, firstMatchFound[1]);*/
 	                                                          
 	    xdo_mousemove(newdo, XOFFSET, YOFFSET, 0);
 	    xdo_mousemove_relative(newdo, SPACING/2, SPACING/2);
@@ -180,7 +174,7 @@ void main(int argc, char *argv[]) {
 }
 
 int inBounds(int a, int b) {
-    if (a < SIDE_LEN && b < SIDE_LEN && a > 0 && b > 0) return 1;
+    if (a < SIDE_LEN && b < SIDE_LEN && a >= 0 && b >= 0) return 1;
     else return 0;
 }
 
@@ -242,7 +236,7 @@ char** findMatchHorizontal(int grid[SIDE_LEN][SIDE_LEN], int size) {
                                              i-1,
                                              j+1);
                                      sprintf(direction, "down");
-                                     printf("CURRENT = %d\n", current);
+                                     /*printf("CURRENT = %d\n", current);*/
                                      return keyValuePair;
                                  }
 							}
@@ -256,7 +250,7 @@ char** findMatchHorizontal(int grid[SIDE_LEN][SIDE_LEN], int size) {
                                              i+1,
                                              j+1);
                                      sprintf(direction, "up");
-                                     printf("CURRENT = %d\n", current);
+                                     /*printf("CURRENT = %d\n", current);*/
                                      return keyValuePair;
                                 }
                             }
@@ -285,7 +279,7 @@ char** findMatchHorizontal(int grid[SIDE_LEN][SIDE_LEN], int size) {
                                              i-1,
                                              j-1);
                                      sprintf(direction, "down");
-                                     printf("CURRENT = %d\n", current);
+                                     /*printf("CURRENT = %d\n", current);*/
                                      return keyValuePair;
                                 }
                             }   
@@ -299,7 +293,7 @@ char** findMatchHorizontal(int grid[SIDE_LEN][SIDE_LEN], int size) {
                                              i,
                                              j-2);
                                      sprintf(direction, "right");
-                                     printf("CURRENT = %d\n", current);
+                                     /*printf("CURRENT = %d\n", current);*/
                                      return keyValuePair;
                                 }
                             }
@@ -313,7 +307,7 @@ char** findMatchHorizontal(int grid[SIDE_LEN][SIDE_LEN], int size) {
                                              i+1,
                                              j-1);
                                      sprintf(direction, "up");
-                                     printf("CURRENT = %d\n", current);
+                                     /*printf("CURRENT = %d\n", current);*/
                                      return keyValuePair;
                                 }
                             }
@@ -327,7 +321,7 @@ char** findMatchHorizontal(int grid[SIDE_LEN][SIDE_LEN], int size) {
                                              i-1,
                                              j+2);
                                      sprintf(direction, "down");
-                                     printf("CURRENT = %d\n", current);
+                                     /*printf("CURRENT = %d\n", current);*/
                                      return keyValuePair;
                                 }
                             }
@@ -341,7 +335,7 @@ char** findMatchHorizontal(int grid[SIDE_LEN][SIDE_LEN], int size) {
                                              i,
                                              j+3);
                                      sprintf(direction, "left");
-                                     printf("CURRENT = %d\n", current);
+                                     /*printf("CURRENT = %d\n", current);*/
                                      return keyValuePair;
                                      }
                             }
@@ -355,7 +349,7 @@ char** findMatchHorizontal(int grid[SIDE_LEN][SIDE_LEN], int size) {
                                              i+1,
                                              j+2);
                                      sprintf(direction, "up");
-                                     printf("CURRENT = %d\n", current);
+                                     /*printf("CURRENT = %d\n", current);*/
                                      return keyValuePair;
                                 }
                             }
@@ -426,7 +420,7 @@ char** findMatchVertical(int grid[SIDE_LEN][SIDE_LEN], int size) {
                                              i-1,
                                              j-1);
                                      sprintf(direction, "right");
-                                     printf("CURRENT = %d\n", current);
+                                     /*printf("CURRENT = %d\n", current);*/
                                      return keyValuePair;
                                  }
 							}
@@ -440,7 +434,7 @@ char** findMatchVertical(int grid[SIDE_LEN][SIDE_LEN], int size) {
                                              i-1,
                                              j+1);
                                      sprintf(direction, "left");
-                                     printf("CURRENT = %d\n", current);
+                                     /*printf("CURRENT = %d\n", current);*/
                                      return keyValuePair;
                                 }
                             }
@@ -466,7 +460,7 @@ char** findMatchVertical(int grid[SIDE_LEN][SIDE_LEN], int size) {
                                              i-2,
                                              j-1);
                                      sprintf(direction, "right");
-                                     printf("CURRENT = %d\n", current);
+                                     /*printf("CURRENT = %d\n", current);*/
                                      return keyValuePair;
                                 }
                             }   
@@ -481,7 +475,7 @@ char** findMatchVertical(int grid[SIDE_LEN][SIDE_LEN], int size) {
                                              i-3,
                                              j);
                                      sprintf(direction, "down");
-                                     printf("CURRENT = %d\n", current);
+                                     /*printf("CURRENT = %d\n", current);*/
                                      return keyValuePair;
                                 }
                             }
@@ -495,7 +489,7 @@ char** findMatchVertical(int grid[SIDE_LEN][SIDE_LEN], int size) {
                                              i-2,
                                              j+1);
                                      sprintf(direction, "left");
-                                     printf("CURRENT = %d\n", current);
+                                     /*printf("CURRENT = %d\n", current);*/
                                      return keyValuePair;
                                 }
                             }
@@ -520,7 +514,7 @@ char** findMatchVertical(int grid[SIDE_LEN][SIDE_LEN], int size) {
                                              i+2,
                                              j-1);
                                      sprintf(direction, "right");
-                                     printf("CURRENT = %d\n", current);
+                                     /*printf("CURRENT = %d\n", current);*/
                                      return keyValuePair;
                                 }
                             }
@@ -535,7 +529,7 @@ char** findMatchVertical(int grid[SIDE_LEN][SIDE_LEN], int size) {
                                              i+3,
                                              j);
                                      sprintf(direction, "up");
-                                     printf("CURRENT = %d\n", current);
+                                     /*printf("CURRENT = %d\n", current);*/
                                      return keyValuePair;
                                      }
                             }
@@ -549,7 +543,7 @@ char** findMatchVertical(int grid[SIDE_LEN][SIDE_LEN], int size) {
                                              i+2,
                                              j+1);
                                      sprintf(direction, "left");
-                                     printf("CURRENT = %d\n", current);
+                                     /*printf("CURRENT = %d\n", current);*/
                                      return keyValuePair;
                                 }
                             }
@@ -572,104 +566,145 @@ void get_pixel_color(Display *d, Window root, int x, int y, XColor *color) {
 	XQueryColor(d, DefaultColormap(d, DefaultScreen(d)), color);
 }
 
-int findGemColor(XColor *c) {
+int findGemColor(XColor *c1, XColor *c2, XColor *c3, XColor *c4) {
 	
 	GEMCOLOR myGem;
 	
 
-	int red = c->red, green = c->green, blue = c->blue;
+	int red1 = c1->red, green1 = c1->green, blue1 = c1->blue;
+	int red2 = c2->red, green2 = c2->green, blue2 = c2->blue;
+	int red3 = c3->red, green3 = c3->green, blue3 = c3->blue;
+	int red4 = c4->red, green4 = c4->green, blue4 = c4->blue;
+
+    int avgred = (red1 + red2 + red3 + red4) / 4;
+    int avggreen = (green1 + green2 + green3 + green4) / 4;
+    int avgblue = (blue1 + blue2 + blue3 + blue4) / 4;
 
 	/***************************
 	 ===============BLUE
 	 **************************/
-	if(blue > 40000 && 
-	   ((float)(blue) / (float)(green) >= 1.5 ) &&
-	   red < 10000) {
-		myGem = BLUE;
-		return myGem;
-	}
 	
+    if( avgred > (2762 - 1000) &&
+        avgred < (2762 + 1000) &&
+
+        avggreen > (30968 - 1000) &&
+        avggreen < (30968 + 1000) &&
+
+        avgblue > (62065 - 1000) &&
+        avgblue < (62065 + 1000) ) {
+
+            myGem = BLUE;
+            return myGem;
+
+    }
+
 	/***************************
 	 ===============GREEN
 	 **************************/
-	if(green > 35000 &&
-	   (green - red) > 25000 &&
-	   (green - blue) > 20000) {
-		myGem = GREEN;
-		return myGem;
-	}
+    if( avgred > (1799 - 1000) &&
+        avgred < (1799 + 1000) &&
+
+        avggreen > (42212 - 1000) &&
+        avggreen < (42212 + 1000) &&
+
+        avgblue > (5782 - 1000) &&
+        avgblue < (5782 + 1000) ) {
+
+            myGem = GREEN;
+            return myGem;
+
+    }
 
 	/***************************
 	 ===============WHITE
 	 **************************/
-	if(red == green && green == blue) {
-		myGem = WHITE;
-		return myGem;
-	}
-	
-	else if(red > 60000 && green > 60000 && blue > 60000) {
-		myGem = WHITE;
-		return myGem;
-	}
-	
+	    if( avgred > (62708 - 1000) &&
+        avgred < (62708 + 1000) &&
+
+        avggreen > (62708 - 1000) &&
+        avggreen < (62708 + 1000) &&
+
+        avgblue > (62708 - 1000) &&
+        avgblue < (62708 + 1000) ) {
+
+            myGem = WHITE;
+            return myGem;
+
+    }
+
 	/***************************
 	 ===============YELLOW
 	 **************************/
-	if((red > 40000 && green > 50000 && blue < 11000 &&
-	   ((float)green / (float)blue >= 2.5))
-	   ||
-	   (red > 60000 && green > 60000 && blue < 12000)
-	   ||
-	   (red > 42000 && red < 53000 &&
-	   green > 29000 && green < 37000 &&
-	   blue > 2400 && blue < 3500)
-	   ||
-	   (red > 60000 && green > 45000 && blue < 10000)
-	   ||
-	   (red > 65000 && green > 65000 && blue < 12500)) {
-	    
-		myGem = YELLOW;
-		return myGem;
-	}
 	
+    if( avgred > (65278 - 1000) &&
+        avgred < (65278 + 1000) &&
+
+        avggreen > (60523 - 1000) &&
+        avggreen < (60523 + 1000) &&
+
+        avgblue > (8609 - 1000) &&
+        avgblue < (8609 + 1000) ) {
+
+            myGem = YELLOW;
+            return myGem;
+
+    }
 	/***************************
 	 ===============RED
 	 **************************/
-	if(red > 62000 && green < 10000 && blue < 20000) {
-		myGem = RED;
-		return myGem;
-	}
 	     
+    if( avgred > (61680 - 1000) &&
+        avgred < (61680 + 1000) &&
+
+        avggreen > (6296 - 1000) &&
+        avggreen < (6296 + 1000) &&
+
+        avgblue > (12978 - 1000) &&
+        avgblue < (12978 + 1000) ) {
+
+            myGem = RED;
+            return myGem;
+
+    }
 	/***************************
 	 ===============PURPLE
 	 **************************/
-	if((red == blue && green < 10000)
-	   ||
-	   (red >= 3072 && green <= 2056 && blue <= 3072)
-	   ||
-	   (red >= 5000 && green <= 4000 && blue <= 4500)
-	   ||
-	   (red >= 12500 && green <= 9000 && blue <= 7500)) {
-		myGem = PURPLE;
-		return myGem;
-	}
 	     
+    if( avgred > (59431 - 1000) &&
+        avgred < (59431 + 1000) &&
+
+        avggreen > (3469 - 1000) &&
+        avggreen < (3469 + 1000) &&
+
+        avgblue > (59431 - 1000) &&
+        avgblue < (59431 + 1000) ) {
+
+            myGem = PURPLE;
+            return myGem;
+
+    }
 	/***************************
 	 ===============ORANGE
 	 **************************/
 	 
-	 //This one's shitty and hard to define on RGB terms
-	 //So I left it for last!
-	 
-	if(red > 55000 &&
-	   green > 18000 &&
-	   ((float)(green) / (float)(blue) > 1.8)
-	   ||
-	   (red > 60000 && green > 55000 && blue < 20000)) {
-		myGem = ORANGE;
-		return myGem;
-	}
-	
-	return 9;
+     if( avgred > (57375 - 1000) &&
+        avgred < (57375 + 1000) &&
+
+        avggreen > (21588 - 1000) &&
+        avggreen < (21588 + 1000) &&
+
+        avgblue > (5140 - 1000) &&
+        avgblue < (5140 + 1000) ) {
+
+            myGem = ORANGE;
+            return myGem;
+
+    }
+
+    /**********
+     * else
+     * *******/
+
+     return 9;
 	
 }
