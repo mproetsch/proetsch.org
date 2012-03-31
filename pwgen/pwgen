@@ -1,11 +1,27 @@
 #! /bin/bash
 #pwgen: search a file encrypted with aescrypt (aescrypt.com/download.html) for a username/password pair
 
+#Simulates keystrokes in seq arg2 to window with name arg1
+print_to_window () {
+  #param1: window title
+  #param2: password
+
+  #See if there are more than one window with title == $1
+  if [ $(xdotool search --name $1 | wc -l) -gt 1 ]
+  then
+    echo More than one window with $1 in title
+    return
+  fi
+
+  xdotool windowfocus $(xdotool search --name $1)
+  xdotool type $2
+}
+
 #Keychain locations
 KEYCHAIN_DECRYPTED=$XDG_DATA_HOME/pwdb/keychain.kcn
 KEYCHAIN_ENCRYPTED=$XDG_DATA_HOME/pwdb/keychain.aes
 
-#Get password and domain (pw for reddit.com, facebook.com, suntrust.com, etc)
+#Get password and domain (pw for facebook.com, mybank.com, etc)
 #This isn't secure, so make sure your environment is!
 read -s -p 'Password: ' PWORD
 echo -e
@@ -13,53 +29,43 @@ read -p 'Domain: ' DOMAIN
 
 aescrypt -d -p $PWORD -o $KEYCHAIN_DECRYPTED $KEYCHAIN_ENCRYPTED
 
-if [ ! -e $KEYCHAIN_DECRYPTED ]
+if [ ! -f $KEYCHAIN_DECRYPTED ]
 then
-  #aescrypt will print an appropriate error statemenrt
+  #aescrypt will print an appropriate error statement
   #so we don't have to
   exit
 fi
 
-#Get the number of lines (but not filename!) from wc by piping the cat output to it
-KEYCHAIN_LINES=`cat $KEYCHAIN_DECRYPTED | wc -l`
-KEYCHAIN_LINES=`expr $KEYCHAIN_LINES + 1`
-
-#This whole predicament could have been avoided with CURRENT_LINE=`grep $DOMAIN $KEYCHAIN_DECRYPTED`
-#Iterate through $KEYCHAIN_DECRYPTED's lines, checking to see if domain matches $DOMAIN in any of them
-
 FOUND=0
+DPASS=$(grep "$DOMAIN " $KEYCHAIN_DECRYPTED | awk '{print $2}' | cut -c -12)
 
-for i in  $(eval echo {1..$KEYCHAIN_LINES})
-do
-  #Sets $1 to DOMAIN and $2 to the associated PASSWORD
-  set -- `head -n $i $KEYCHAIN_DECRYPTED | tail -n 1`
+if [ ! -z $DPASS ]
+then
+  FOUND=1
+  echo $DPASS
+  
+  #Echo $DPASS to our Firefox window, if it's open
+  print_to_window Mozilla $DPASS
 
-  #check to see if the first word on the line is our domain
-  if [ $1 = $DOMAIN ]
-  then
-    FOUND=1
-    echo $2 > $XDG_DATA_HOME/pwdb/$DOMAIN.out
-    leafpad $XDG_DATA_HOME/pwdb/$DOMAIN.out
-
-    #Clean up!
-    rm $XDG_DATA_HOME/pwdb/$DOMAIN.out
-  fi
-done
+fi
 
 if [ $FOUND = 0 ]
 then
   #Ensure we are working with a decrypted copy
   if [ -e $KEYCHAIN_DECRYPTED ]
   then
-    NEW_PW=`newpw 12`
-    echo $DOMAIN $NEW_PW >> $KEYCHAIN_DECRYPTED
-    aescrypt -e -p $PWORD -o $KEYCHAIN_ENCRYPTED $KEYCHAIN_DECRYPTED
+    read -p "Write new password for $DOMAIN (Y/n)? " WRITE
+    if [ 'n' != $WRITE -a 'N' != $WRITE ]
+    then
 
-    echo 'Wrote new password for ' $DOMAIN
-    echo $NEW_PW > $XDG_DATA_HOME/pwdb/$DOMAIN.new
-    leafpad $XDG_DATA_HOME/pwdb/$DOMAIN.new
+      DPASS=`newpw 12`
+      echo $DOMAIN $DPASS >> $KEYCHAIN_DECRYPTED
+      aescrypt -e -p $PWORD -o $KEYCHAIN_ENCRYPTED $KEYCHAIN_DECRYPTED
 
-    rm $XDG_DATA_HOME/pwdb/$DOMAIN.new
+      echo 'Wrote new password for' $DOMAIN
+      echo $DPASS
+
+    fi
   fi
 fi
 
