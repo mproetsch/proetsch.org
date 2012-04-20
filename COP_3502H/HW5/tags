@@ -5,29 +5,30 @@
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.8	//
 BOTH	BinarySearchTree.h	/^    BOTH$/;"	e	enum:_numkids
-Book	BinarySearchTree.h	/^} Book;$/;"	t	typeref:struct:__anon3
+Book	BinarySearchTree.h	/^typedef struct Book {$/;"	s
+Book	BinarySearchTree.h	/^} Book;$/;"	t	typeref:struct:Book
+Book::author	BinarySearchTree.h	/^    char author[30];$/;"	m	struct:Book	access:public
+Book::key	BinarySearchTree.h	/^    int key;$/;"	m	struct:Book	access:public
+Book::quantity	BinarySearchTree.h	/^    int quantity;$/;"	m	struct:Book	access:public
+Book::title	BinarySearchTree.h	/^    char title[50];$/;"	m	struct:Book	access:public
 LEFT	BinarySearchTree.h	/^    LEFT,$/;"	e	enum:_numkids
 NONE	BinarySearchTree.h	/^    NONE,$/;"	e	enum:_numkids
 RIGHT	BinarySearchTree.h	/^    RIGHT,$/;"	e	enum:_numkids
-__anon3::author	BinarySearchTree.h	/^    char author[30];$/;"	m	struct:__anon3	access:public
-__anon3::key	BinarySearchTree.h	/^    int key;$/;"	m	struct:__anon3	access:public
-__anon3::quantity	BinarySearchTree.h	/^    int quantity;$/;"	m	struct:__anon3	access:public
-__anon3::title	BinarySearchTree.h	/^    char title[50];$/;"	m	struct:__anon3	access:public
-__anon4::bk	BinarySearchTree.h	/^    Book *bk;$/;"	m	struct:__anon4	access:public
-__anon4::left	BinarySearchTree.h	/^    node *left;$/;"	m	struct:__anon4	access:public
-__anon4::right	BinarySearchTree.h	/^    node *right;$/;"	m	struct:__anon4	access:public
+__anon2::bk	BinarySearchTree.h	/^    Book *bk;$/;"	m	struct:__anon2	access:public
+__anon2::left	BinarySearchTree.h	/^    node *left;$/;"	m	struct:__anon2	access:public
+__anon2::right	BinarySearchTree.h	/^    node *right;$/;"	m	struct:__anon2	access:public
 _numkids	BinarySearchTree.h	/^typedef enum _numkids {$/;"	g
-author	BinarySearchTree.h	/^    char author[30];$/;"	m	struct:__anon3	access:public
-bk	BinarySearchTree.h	/^    Book *bk;$/;"	m	struct:__anon4	access:public
+author	BinarySearchTree.h	/^    char author[30];$/;"	m	struct:Book	access:public
+bk	BinarySearchTree.h	/^    Book *bk;$/;"	m	struct:__anon2	access:public
 del	BinarySearchTree.h	/^node* del(node *list, node *remove) {$/;"	f	signature:(node *list, node *remove)
 find	BinarySearchTree.h	/^node* find(node *current, int val) {$/;"	f	signature:(node *current, int val)
 init	BinarySearchTree.h	/^node* init() {$/;"	f	signature:()
 insert	BinarySearchTree.h	/^void insert(node *list, Book *book) {$/;"	f	signature:(node *list, Book *book)
-key	BinarySearchTree.h	/^    int key;$/;"	m	struct:__anon3	access:public
-left	BinarySearchTree.h	/^    node *left;$/;"	m	struct:__anon4	access:public
+key	BinarySearchTree.h	/^    int key;$/;"	m	struct:Book	access:public
+left	BinarySearchTree.h	/^    node *left;$/;"	m	struct:__anon2	access:public
 main	BookStore.c	/^int main() {$/;"	f
-node	BinarySearchTree.h	/^} node;$/;"	t	typeref:struct:__anon4
+node	BinarySearchTree.h	/^} node;$/;"	t	typeref:struct:__anon2
 numkids	BinarySearchTree.h	/^} numkids;$/;"	t	typeref:enum:_numkids
-quantity	BinarySearchTree.h	/^    int quantity;$/;"	m	struct:__anon3	access:public
-right	BinarySearchTree.h	/^    node *right;$/;"	m	struct:__anon4	access:public
-title	BinarySearchTree.h	/^    char title[50];$/;"	m	struct:__anon3	access:public
+quantity	BinarySearchTree.h	/^    int quantity;$/;"	m	struct:Book	access:public
+right	BinarySearchTree.h	/^    node *right;$/;"	m	struct:__anon2	access:public
+title	BinarySearchTree.h	/^    char title[50];$/;"	m	struct:Book	access:public
